@@ -19,7 +19,7 @@ function init() {
     }
     let services = JSON.parse(system.files.get("/etc/systemc.json")).services
     for (const i in services) {
-        system.startProcess(services[i], services[i])
+        system.startProcess(services[i])
     }
 
     //system.gui.newWindow(PID)
