@@ -130,7 +130,11 @@ async function kernel() {
 		console.log("fetchURL request to " + url)
 		const response = await fetch(url);
 		const data = await response.text();
-		return data;
+		if (response.ok) {
+			return data;
+		} else {
+			return undefined
+		}
 	}
 
 	try {
