@@ -445,7 +445,6 @@ async function kernel() {
 				let cmd
 				for (const i in path) {
 					let temp = path[i] + "/" + segments[0] + ".js"
-					console.log(temp)
 					if (system.files.get(temp) !== undefined) {
 						cmd = String(temp)
 						break;

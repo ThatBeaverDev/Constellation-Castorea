@@ -1,5 +1,5 @@
 // Creates User
 
 function init(args) {
-    system.post(args)
+    console.post(args)
 }

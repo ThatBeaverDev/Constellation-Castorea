@@ -2,7 +2,7 @@
 
 function init(args) {
     if (args[0] == undefined) {
-        system.post("usage: killall [processDirectory]\nYou must specify the process directory to kill.")
+        console.post("usage: killall [processDirectory]\nYou must specify the process directory to kill.")
     }
 
     let toKill = []

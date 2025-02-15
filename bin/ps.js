@@ -8,5 +8,5 @@ function init(args) {
         data += item.PID + " - " + item.name + "\n"
         } catch(e) {}
     }
-    system.post(data)
+    console.post(data)
 }
