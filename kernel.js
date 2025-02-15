@@ -80,29 +80,50 @@ async function kernel() {
 	}
 
 	system.log = function(origin, str) {
-		let obj = {type: "log", content: (origin || Name) + ": " +  system.cast.Stringify(str)}
+		let obj = {type: "log", origin: origin,  content: (origin || Name) + ": " +  system.cast.Stringify(str), origin: origin}
 		system.logs.push(obj)
 		console.log(system.logs[system.logs.length - 1].content)
 		system.refreshLogsPanel()
+		return system.logs.length - 1
 	}
-	system.post = function(str) {
-		let obj = {type: "log", content: system.cast.Stringify(str)}
+	system.post = function(origin, str) {
+		let obj = {type: "post", origin: origin,  content: system.cast.Stringify(str), origin: origin}
 		system.logs.push(obj)
 		console.log(system.logs[system.logs.length - 1].content)
 		system.refreshLogsPanel()
+		return system.logs.length - 1
 	}
 
 	system.warn = function(origin, str) {
-		let obj = {type: "warn", content: (origin || Name) + ": " +  system.cast.Stringify(str)}
+		let obj = {type: "warn", origin: origin,  content: (origin || Name) + ": " +  system.cast.Stringify(str), origin: origin}
 		system.logs.push(obj)
 		console.warn(system.logs[system.logs.length - 1].content)
 		system.refreshLogsPanel()
+		return system.logs.length - 1
 	}
 	system.error = function(origin, str) {
-		let obj = {type: "error", content: (origin || Name) + ": " +  system.cast.Stringify(str)}
+		let obj = {type: "error", origin: origin, content: (origin || Name) + ": " +  system.cast.Stringify(str)}
 		system.logs.push(obj)
 		console.error(system.logs[system.logs.length - 1].content)
 		system.refreshLogsPanel()
+		return system.logs.length - 1
+	}
+
+	system.editLog = function (origin, str, id) {
+		let obj = ""
+		switch (system.logs[id].type) {
+			case "post":
+				obj = {type: "post", content: system.cast.Stringify(str), origin: origin}
+				break;
+			default:
+				obj = {type: system.logs[id].type, content: (origin || Name) + ": " +  system.cast.Stringify(str), origin: origin}
+		}
+		if (origin == system.logs[id].origin) {
+			system.logs[id] = obj
+			system.refreshLogsPanel()
+		} else {
+			system.warn("Program " + origin + " has attemped to overwrite a log of a different program, log ID: " + system.logs[id].origin)
+		}
 	}
 
 	system.fetchURL = async function fetchURL(url) {
