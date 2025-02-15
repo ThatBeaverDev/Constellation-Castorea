@@ -14,7 +14,6 @@
       "/usr/bin/systemc/systemC.js",
       "/usr/bin/crl/crl.js",
       "/usr/bin/desktopEnv/desktopEnv.js",
-      "/usr/bin/crl/astGen.js",
       "/bin/wget.js",
       "/bin/iframe.js",
       "/usr/bin/cryptography/cryptography.js",
@@ -23,8 +22,12 @@
       "/bin/touch.js",
       "/bin/constellinux.js",
       "/bin/neofetch.js",
-      "/temp.crl",
-      "/bin/rn.js"
+      "/bin/rn.js",
+      "/bin/mv.js",
+      "/bin/rm.js",
+      "/etc/path.json",
+      "/bin/kill.js",
+      "/bin/killall.js"
     ],
     "folders": [
         "/bin",
