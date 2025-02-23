@@ -70913,3 +70913,5 @@ async function init() {
 	// @ts-ignore
     system.cryptography = new extension()
 }
+
+init() // needs this to work because it's run differently, with eval() directly.
