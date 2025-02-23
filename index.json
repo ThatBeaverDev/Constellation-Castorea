@@ -1,5 +1,7 @@
 {
     "files": [
+      "/boot/kernel.js",
+      "/boot/loader.js",
       "/bin/ls.js",
       "/bin/pwd.js",
       "/bin/clear.js",
@@ -27,10 +29,13 @@
       "/bin/rm.js",
       "/etc/path.json",
       "/bin/kill.js",
-      "/bin/killall.js"
+      "/bin/killall.js",
+      "/boot/build.js",
+      "/bin/exportFile.js"
     ],
     "folders": [
         "/bin",
+        "/boot",
         "/etc",
         "/usr",
         "/usr/bin",
