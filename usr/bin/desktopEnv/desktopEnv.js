@@ -55,6 +55,10 @@ function init() {
 
 	// rest of INIT
 	system.gui = {}
+	const gui = document.createElement("div")
+	gui.id = "gui"
+	document.body.appendChild(gui)
+	delete gui
 	system.gui.element = document.getElementById("gui")
 	system.gui.windows = []
 
