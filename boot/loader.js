@@ -7,10 +7,12 @@ function checkIfCompatible() {
     if (window.showSaveFilePicker == undefined) {
         obj.isCompatible = false
         obj.reason = "File_System_API"
+		obj.showReason = "Filesystem API"
     }
     if ((crypto || {}).subtle == undefined) {
         obj.isCompatible = false
         obj.reason = "Crypto/subtle"
+		obj.showReason = "crypto.subtle"
     }
     return obj
 }
@@ -152,19 +154,19 @@ async function loader() {
 		return system.logs.length - 1
 	}
 
-	system.editLog = function(origin, str, id) {
+	system.editLog = function(origin, str, id, newType) {
 		let obj = ""
 		switch (system.logs[id].type) {
 			case "post":
 				obj = {
-					type: "post",
+					type: (newType || "post"),
 					content: system.cast.Stringify(str),
 					origin: origin
 				}
 				break;
 			default:
 				obj = {
-					type: system.logs[id].type,
+					type: (newType || system.logs[id].type),
 					content: (origin || Name) + ": " + system.cast.Stringify(str),
 					origin: origin
 				}
@@ -181,7 +183,8 @@ async function loader() {
 
     if (!obj.isCompatible) {
         system.error(Name,"Sorry, but your browser is not compatible with This System.")
-        system.error(Name,'Reason is your browser does not support <a href="https://developer.mozilla.org/en-US/docs/Web/API/' + obj.reason + '">' + obj.reason + '</a>')
+		if (obj.showReason == undefined) obj.Showreason = obj.reason
+        system.error(Name,'Reason is your browser does not support <a href="https://developer.mozilla.org/en-US/docs/Web/API/' + obj.reason + '">' + obj.showReason + '</a>')
         document.getElementById("preInput").innerText = ""
         return
     }
@@ -499,28 +502,26 @@ async function bootOS(osName) {
 
             // run kernel
             castoreaKernel = system.files.get("/boot/kernel.js")
-			eval(castoreaKernel)
 			break;
 		case "new":
 			system.fileHandle = await window.showSaveFilePicker(system.localFS.options)
 			system.isNew = true
 
             // fetch kernel since it's not present yet to be ran
-            try {
-                system.folders.writeFolder("/boot")
-            } catch(e) {}
+        	system.folders.writeFolder("/boot")
             const kern = await system.fetchURL(system.baseURI + "/boot/kernel.js") // kernel download
             system.files.writeFile("/boot/kernel.js", kern)
             castoreaKernel = system.files.get("/boot/kernel.js")
 
-			eval(castoreaKernel)
-			setTimeout(function() {
-				system.localFS.commit()
-			}, 1000)
 			break;
-		default:
-			throw new Error("Unknown OS: " + osName)
-	}
+			default:
+				throw new Error("Unknown Case: " + osName)
+			}
+	eval(castoreaKernel)
 }
 
-loader()
+try {
+	loader()
+} catch(e) {
+	document.getElementById("logsBox").innerText = e.stack
+}
