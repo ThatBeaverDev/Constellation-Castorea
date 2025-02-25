@@ -502,6 +502,9 @@ async function bootOS(osName) {
 
             // run kernel
             castoreaKernel = system.files.get("/boot/kernel.js")
+			setTimeout(function () {
+				system.localFS.commit()
+			}, 1000)
 			break;
 		case "new":
 			system.fileHandle = await window.showSaveFilePicker(system.localFS.options)
