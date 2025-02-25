@@ -97,6 +97,9 @@ async function kernel() {
 			}
 		}
 
+		system.aurora = {}
+		system.aurora.url = "../aurora" // aurora URL set
+
 		if (system.isNew) {
 			system.log(Name, "Creating Basic Directories...")
 
@@ -116,7 +119,7 @@ async function kernel() {
 			}
 
 			// fetch Aurora (package manager)
-			obj = await system.fetchURL("../aurora/aurora.js")
+			obj = await system.fetchURL(system.aurora.url + "/aurora.js")
 			system.files.writeFile("/bin/aurora.js", obj)
 		}
 
