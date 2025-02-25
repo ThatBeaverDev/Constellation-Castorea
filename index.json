@@ -11,11 +11,7 @@
     "/etc",
     "/usr",
     "/usr/bin",
-    "/usr/bin/crl",
-    "/usr/bin/systemc",
-    "/usr/bin/desktopEnv",
-    "/home",
-    "/usr/bin/cryptography"
+    "/home"
   ],
   "packages": [
     "ls",
