@@ -1,4 +1,4 @@
-async function kernel() {
+async function init() {
 	const Name = "/boot/kernel.js"
 	const PID = -1
 
@@ -9,6 +9,7 @@ async function kernel() {
 		// https://patorjk.com/software/taag/#p=display&h=0&f=Doom&t=Constellinux 
 		system.post("", String(" _____                     _          _  _  _                     \n/  __ \\                   | |        | || |(_)                    \n| /  \\/  ___   _ __   ___ | |_   ___ | || | _  _ __   _   _ __  __\n| |     / _ \\ | '_ \\ / __|| __| / _ \\| || || || '_ \\ | | | |\\ \\/ /\n| \\__/\\| (_) || | | |\\__ \\| |_ |  __/| || || || | | || |_| | >  < \n \\____/ \\___/ |_| |_||___/ \\__| \\___||_||_||_||_| |_| \\__,_|/_/\\_\\"))
 		system.post("", " ")
+		document.getElementById('preInput').innerText = "Please wait..."
 
 		system.temp = await system.fetchURL("https://thatbeaverdev.github.io/beaverUtils.js")
 		eval(system.temp)
@@ -74,9 +75,9 @@ async function kernel() {
 			system.processes[system.procCount] = obj
 			system.procCount++
 			if (system.safe) {
-				eval(obj.code + "\ntry {init(args) } catch(e) {  system.error(e, Name)  }")
+				await eval(obj.code + "\ntry {init(args) } catch(e) {  system.error(e, Name)  }")
 			} else {
-				eval(obj.code + "\ninit(args)")
+				await eval(obj.code + "\ninit(args)")
 			}
 			return system.procCount - 1
 		}
@@ -104,7 +105,6 @@ async function kernel() {
 			system.log(Name, "Creating Basic Directories...")
 
 			let list = await system.fetchURL(system.baseURI + "/index.json")
-
 			folders = JSON.parse(list).folders
 			for (const item in folders) {
 				system.folders.writeFolder(folders[item])
@@ -123,12 +123,67 @@ async function kernel() {
 			system.files.writeFile("/bin/aurora.js", obj)
 		}
 
+		// initiate system to run terminal commands, including PATH
+
+		system.path = JSON.parse(system.files.get("/etc/path.json"))
+
+		system.eval = async function(code, pre, silent) {
+			if (!silent) system.post("", pre + code)
+			let segments = String(code).split(" ")
+			const path = system.path
+			let cmd
+			for (const i in path) {
+				let temp = path[i] + "/" + segments[0] + ".js"
+				if (system.files.get(temp) !== undefined) {
+					cmd = String(temp)
+					break;
+				}
+			}
+			if (system.files.get(cmd) == undefined) {
+				//system.log(Name,"command not found:  " + segments[0])
+				try {
+					system.post("", eval(code))
+				} catch (e) {
+					system.post("", "Unknown Command: " + code + ". it is not valid JavaScript OR a valid Terminal command.")
+				}
+			} else {
+				system.startProcess(cmd, segments.slice(1))
+			}
+		}
+
+		system.installed = false
+
+		if (system.isNew) {
+			// run installer script
+			const inst = system.files.get("/boot/install.js")
+			const installation = await eval(inst)
+		} else {
+			system.installed = true
+		}
+
+		setInterval(function () {
+			if (system.running) {
+				return
+			} else if (system.installed) {
+				system.running = true
+				lateInit()
+			}
+		}, 100)
+	} catch (e) {
+		system.error("Kernel Panic in init - " + e.stack)
+	}
+}
+
+async function lateInit() {
+	const Name = "/boot/kernel.js"
+	const PID = -1
+		try {
+
 		system.log(Name, "Starting systemC...")
 		system.user = "sudo"
 		system.startProcess("/usr/bin/systemc/systemC.js").then()
 		if (!system.systemC) {
-			system.error("systemC not running.")
-			return
+			system.error(Name,"systemC not running! System may Behave Weirdly!")
 		}
 
 		system.input = document.getElementById('input');
@@ -162,31 +217,6 @@ async function kernel() {
 			system.keys[e.key] = false
 		})
 
-		system.eval = async function(code, pre) {
-			system.post("", pre + code)
-			let segments = String(code).split(" ")
-			const path = system.path
-			let cmd
-			for (const i in path) {
-				let temp = path[i] + "/" + segments[0] + ".js"
-				if (system.files.get(temp) !== undefined) {
-					cmd = String(temp)
-					break;
-				}
-			}
-			if (system.files.get(cmd) == undefined) {
-				//system.log(Name,"command not found:  " + segments[0])
-				try {
-					system.post("", eval(code))
-				} catch (e) {
-					system.post("", "Unknown Command: " + code + ". it is not valid JavaScript OR a valid Terminal command.")
-				}
-			} else {
-				system.startProcess(cmd, segments.slice(1))
-			}
-		}
-
-		system.path = JSON.parse(system.files.get("/etc/path.json"))
 		system.log(Name, "Beginning to run processes...")
 		system.post("", " ")
 
@@ -211,8 +241,8 @@ async function kernel() {
 
 		setInterval(system.localFS.commit, 5000)
 	} catch (e) {
-		system.error("KERNEL PANIC - " + e.stack)
+		system.error("Kernel Panic in lateInit / Runtime - " + e.stack)
 	}
 }
 
-kernel()
+init()
