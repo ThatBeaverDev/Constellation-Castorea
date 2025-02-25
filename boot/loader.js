@@ -369,7 +369,7 @@ async function loader() {
 
 	// run cryptography so we can actually write to files
 
-	const crypt = await system.fetchURL(system.baseURI + '/usr/bin/cryptography/cryptography.js') // cryptoFetch
+	const crypt = await system.fetchURL(system.baseURI + '/boot/cryptography.js') // cryptoFetch
 	eval(crypt)
 
 	system.localFS = {}
