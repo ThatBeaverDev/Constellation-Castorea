@@ -366,7 +366,7 @@ async function loader() {
 
 	// run cryptography so we can actually write to files
 
-	const crypt = await system.fetchURL('./usr/bin/cryptography/cryptography.js')
+	const crypt = await system.fetchURL(system.baseURI + '/usr/bin/cryptography/cryptography.js') // cryptoFetch
 	eval(crypt)
 
 	system.localFS = {}
@@ -509,7 +509,7 @@ async function bootOS(osName) {
             try {
                 system.folders.writeFolder("/boot")
             } catch(e) {}
-            const kern = await system.fetchURL(system.baseURI + "/boot/kernel.js")
+            const kern = await system.fetchURL(system.baseURI + "/boot/kernel.js") // kernel download
             system.files.writeFile("/boot/kernel.js", kern)
             castoreaKernel = system.files.get("/boot/kernel.js")
 
