@@ -224,12 +224,12 @@ async function loader() {
 
 	system.files.writeFile = function writeFile(dirOld, content) {
 		try {
-			let dir = dirOld // use to replace ~ with home dir in future
-			let location = dir.substr(0, dir.lastIndexOf("/"))
+			let dir = String(dirOld) // use to replace ~ with home dir in future
+			let location = dir.substring(0, dir.lastIndexOf("/"))
 			if (location == "") {
 				location = "/"
 			}
-			let filename = dir.substr(dir.lastIndexOf("/") + 1)
+			let filename = dir.substring(dir.lastIndexOf("/") + 1)
 			let obj = {}
 			obj.id = system.files.count
 			system.files.count += 1
@@ -238,7 +238,7 @@ async function loader() {
 			system.files[obj.id] = obj
 			system.localFS.updated = true
 		} catch (e) {
-			system.error("Error Writing to File at " + dirOld + ": " + e)
+			system.error(Name, "Error Writing to File at " + dirOld + ": " + e)
 			return false
 		}
 		return true
@@ -246,19 +246,19 @@ async function loader() {
 
 	system.files.move = function(dirOld, dirNew) {
 		// old directory for file
-		let dirO = dirOld // use to replace ~ with home dir in future
-		let locationOld = dirO.substr(0, dirO.lastIndexOf("/"))
+		let dirO = String(dirOld) // use to replace ~ with home dir in future
+		let locationOld = dirO.substring(0, dirO.lastIndexOf("/"))
 		if (locationOld == "") {
 			locationOld = "/"
 		}
-		let filenameOld = dirO.substr(dirO.lastIndexOf("/") + 1)
+		let filenameOld = dirO.substring(dirO.lastIndexOf("/") + 1)
 		// new directory for file
 		let dirN = dirNew // use to replace ~ with home dir in future
-		let locationNew = dirN.substr(0, dirN.lastIndexOf("/"))
+		let locationNew = dirN.substring(0, dirN.lastIndexOf("/"))
 		if (locationNew == "") {
 			locationNew = "/"
 		}
-		let filenameNew = dirN.substr(dirN.lastIndexOf("/") + 1)
+		let filenameNew = dirN.substring(dirN.lastIndexOf("/") + 1)
 
 		const id = system.folders[locationOld].children[filenameOld] // copy the ID of the file
 		console.log(id)
@@ -269,30 +269,30 @@ async function loader() {
 
 	system.files.copy = function(dirOld, dirNew) {
 		// old directory for file
-		let dirO = dirOld // use to replace ~ with home dir in future
-		let locationOld = dirO.substr(0, dirO.lastIndexOf("/"))
+		let dirO = String(dirOld) // use to replace ~ with home dir in future
+		let locationOld = dirO.substring(0, dirO.lastIndexOf("/"))
 		if (locationOld == "") {
 			locationOld = "/"
 		}
-		let filenameOld = dirO.substr(dirO.lastIndexOf("/") + 1)
+		let filenameOld = dirO.substring(dirO.lastIndexOf("/") + 1)
 		// new directory for file
 		let dirN = dirNew // use to replace ~ with home dir in future
-		let locationNew = dirN.substr(0, dirN.lastIndexOf("/"))
+		let locationNew = dirN.substring(0, dirN.lastIndexOf("/"))
 		if (locationNew == "") {
 			locationNew = "/"
 		}
-		let filenameNew = dirN.substr(dirN.lastIndexOf("/") + 1)
+		let filenameNew = dirN.substring(dirN.lastIndexOf("/") + 1)
 		system.localFS.updated = true
 	}
 
 	system.folders.writeFolder = function writeFolder(dirOld) {
 		try {
-			let dir = dirOld // use to replace ~ with home dir in future
-			let location = dir.substr(0, dir.lastIndexOf("/"))
+			let dir = String(dirOld) // use to replace ~ with home dir in future
+			let location = dir.substring(0, dir.lastIndexOf("/"))
 			if (location == "") {
 				location = "/"
 			}
-			let foldername = dir.substr(dir.lastIndexOf("/") + 1)
+			let foldername = dir.substring(dir.lastIndexOf("/") + 1)
 			let obj = {}
 			obj.children = {}
 			system.folders[dir] = obj
@@ -306,7 +306,7 @@ async function loader() {
 			console.log("Created Directory " + dirOld + " Successfully.")
 			system.localFS.updated = true
 		} catch (e) {
-			system.error("Error Creating Folder at " + dirOld + ": " + e)
+			system.error(Name, "Error Creating Folder at " + dirOld + ": " + e)
 			return false
 		}
 		return true
@@ -314,15 +314,15 @@ async function loader() {
 
 	system.files.get = function get(dirOld) {
 		try {
-			if (dirOld === "") {
+			if (String(dirOld) === "") {
 				return ""
 			}
-			let dir = dirOld // use to replace ~ with home dir in future
-			let location = dir.substr(0, dir.lastIndexOf("/"))
+			let dir = String(dirOld) // use to replace ~ with home dir in future
+			let location = dir.substring(0, dir.lastIndexOf("/"))
 			if (location == "") {
 				location = "/"
 			}
-			let filename = dir.substr(dir.lastIndexOf("/") + 1)
+			let filename = dir.substring(dir.lastIndexOf("/") + 1)
 			try {
 				return system.cryptography.aesCtrDecrypt(system.files[system.folders[location].children[filename]].content, 'ConstellinuxEncode', 256)
 			} catch (e) {
@@ -335,15 +335,15 @@ async function loader() {
 
 	system.folders.listDirectory = function listDirectory(dirOld) {
 		try {
-			let dir = dirOld // use to replace ~ with home dir in future
-			let location = dir.substr(0, dir.lastIndexOf("/"))
+			let dir = String(dirOld) // use to replace ~ with home dir in future
+			let location = dir.substring(0, dir.lastIndexOf("/"))
 			if (location == "") {
 				location = "/"
 			}
 			if (location[location.length - 1] !== "/") {
 				location += "/"
 			}
-			location += dir.substr(dir.lastIndexOf("/") + 1)
+			location += dir.substring(dir.lastIndexOf("/") + 1)
 			return Object.keys(system.folders[location].children)
 		} catch (e) {
 			return []
@@ -352,17 +352,17 @@ async function loader() {
 
 	system.files.deleteFile = function deleteFile(dirOld) {
 		try {
-			let dir = dirOld // use to replace ~ with home dir in future
-			let location = dir.substr(0, dir.lastIndexOf("/"));
+			let dir = String(dirOld) // use to replace ~ with home dir in future
+			let location = dir.substring(0, dir.lastIndexOf("/"));
 			if (location == "") {
 				location = "/"
 			}
-			let filename = dir.substr(dir.lastIndexOf("/") + 1);
+			let filename = dir.substring(dir.lastIndexOf("/") + 1);
 			delete system.files[system.folders[location].children[filename]]
 			delete system.folders[location].children[filename]
 			system.localFS.updated = true
 		} catch (e) {
-			system.error("Error Deleting File File at " + dirOld + ": " + e)
+			system.error(Name, "Error Deleting File File at " + String(dirOld) + ": " + e)
 			return
 		}
 	}
