@@ -3,7 +3,7 @@ async function init() {
 	const PID = -1
 
 	try {
-		system.constellinux.constellinux = "ckv0.1.1"
+		system.constellinux.constellinux = "ckv0.1.2"
 		system.constellinux.terminal = system.constellinux.constellinux
 
 		// https://patorjk.com/software/taag/#p=display&h=0&f=Doom&t=Constellinux 
@@ -218,7 +218,6 @@ async function lateInit() {
 		})
 
 		system.log(Name, "Beginning to run processes...")
-		system.post("", " ")
 
 
 		var runtime = setInterval(function() {
