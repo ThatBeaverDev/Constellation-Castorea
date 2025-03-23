@@ -70,7 +70,9 @@ async function init() {
 			return result
 		}
 
-		system.startProcess = function(dir, args, isUnsafe) {
+		system.asyncFunction = Object.getPrototypeOf(async function(){}).constructor;
+
+		system.startProcess = async function(dir, args, isUnsafe) {
 			try {
 			if (system.files.get(dir) == undefined) {
 				return
@@ -116,39 +118,42 @@ async function init() {
 
 			system.systemWrapper = Boolean(system.systemWrapper)
 
+			// so we can make an Async function for init
+			const AsyncFunction = system.asyncFunction
+
 			if (isUnsafe) {
 				if (system.safe && system.systemWrapper) {
 					// safe mode, unsafe and systemWrapper
 					obj.frame = new Function("lcl", "ssm", obj.code + "\ntry {  frame(args) } catch(e) {  csw.console.error(token, Name, e)  }")
-					obj.init = new Function("lcl", "ssm", obj.code + "\ntry {  init(args) } catch(e) {  csw.console.error(token, Name, e)  }")
+					obj.init = new AsyncFunction("lcl", "ssm", obj.code + "\ntry {  init(args) } catch(e) {  csw.console.error(token, Name, e)  }")
 				}
 				if (system.safe && !system.systemWrapper) {
 					// safe mode, unsafe, no systemWrapper
 					obj.frame = new Function("lcl", "ssm", obj.code + "\ntry {  frame(args) } catch(e) {  system.error(Name, e)  }")
-					obj.init = new Function("lcl", "ssm", obj.code + "\ntry {  init(args) } catch(e) {  system.error(Name, e)  }")
+					obj.init = new AsyncFunction("lcl", "ssm", obj.code + "\ntry {  init(args) } catch(e) {  system.error(Name, e)  }")
 				}
 
 				if (!system.safe) {
 					// no safe mode, unsafe
 					obj.frame = new Function("lcl", "ssm", obj.code + "\nframe(args)")
-					obj.init = new Function("lcl", "ssm", obj.code + "\ninit(args)")
+					obj.init = new AsyncFunction("lcl", "ssm", obj.code + "\ninit(args)")
 				}
 			} else {
 				if (system.safe && system.systemWrapper) {
 					// safe mode, not unsafe, systemWrapper
 					obj.frame = new Function("lcl", obj.code + "\ntry {  frame(args) } catch(e) {  csw.console.error(token, Name, e)  }")
-					obj.init = new Function("lcl", obj.code + "\ntry {  init(args) } catch(e) {  csw.console.error(token, Name, e)  }")
+					obj.init = new AsyncFunction("lcl", obj.code + "\ntry {  init(args) } catch(e) {  csw.console.error(token, Name, e)  }")
 				}
 				if (system.safe && !system.systemWrapper) {
 					// safe mode, not unsafe, no systemWrapper
 					obj.frame = new Function("lcl", obj.code + "\ntry {  frame(args) } catch(e) {  system.error(Name, e)  }")
-					obj.init = new Function("lcl", obj.code + "\ntry {  init(args) } catch(e) {  system.error(Name, e)  }")
+					obj.init = new AsyncFunction("lcl", obj.code + "\ntry {  init(args) } catch(e) {  system.error(Name, e)  }")
 				}
 
 				if (!system.safe) {
 					// no safe mode, not unsafe
 					obj.frame = new Function("lcl", obj.code + "\nframe(args)")
-					obj.init = new Function("lcl", obj.code + "\init(args)")
+					obj.init = new AsyncFunction("lcl", obj.code + "\init(args)")
 				}
 			}
 			
@@ -156,11 +161,10 @@ async function init() {
 			system.procCount++
 
 			const count = system.procCount - 1
-
 			if (isUnsafe) {
-				obj.init(system.processes[count].variables, system)
+				await obj.init(system.processes[count].variables, system)
 			} else {
-				obj.init(system.processes[count].variables)
+				await obj.init(system.processes[count].variables)
 			}
 
 			return count
@@ -226,9 +230,12 @@ async function init() {
 		system.installed = false
 
 		if (system.isNew) {
-			// run installer script
-			const inst = system.files.get("/boot/install.js")
-			const installation = await eval(inst)
+			// install system
+			let packages = await system.fetchURL(system.baseURI + "/index.json")
+			const index = JSON.parse(packages).packages
+		
+			await system.startProcess("/bin/aurora.js", ["install",index], true)
+			console.warn("installed")
 		} else {
 			system.installed = true
 		}
