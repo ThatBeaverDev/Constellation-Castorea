@@ -1,0 +1,13 @@
+{
+    "root":{
+        "password":"admin",
+        "userID":0,
+        "groupID": 0,
+        "otherInfo":{},
+        "baseDir":"/",
+        "homeDir":"/root",
+        "shell":"/bin/aquila.js",
+        "fullName":"root"
+    },
+    "amount":1
+}
