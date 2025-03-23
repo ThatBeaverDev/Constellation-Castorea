@@ -1,5 +1,6 @@
 [
     "/bin",
+    "/sbin",
     "/usr/bin",
     "/boot"
 ]
