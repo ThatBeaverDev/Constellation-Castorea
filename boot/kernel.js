@@ -1,8 +1,11 @@
 async function init() {
 	const Name = "/boot/kernel.js"
 	const PID = -1
-
+	
 	try {
+		system.logs = []
+		system.refreshLogsPanel()
+
 		system.constellinux.constellinux = "ckv0.1.2"
 		system.constellinux.terminal = system.constellinux.constellinux
 
