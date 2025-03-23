@@ -3,17 +3,39 @@
     "/boot/kernel.js",
     "/boot/loader.js",
     "/boot/install.js",
-    "/etc/path.json"
+    "/etc/path.json",
+    "/etc/passwd.json",
+    "/dev/null",
+    "/dev/urandom"
   ],
   "folders": [
     "/bin",
+    "/sbin",
     "/boot",
+    "/dev",
     "/etc",
+    "/home",
+    "/lib",
+    "/mnt",
+    "/opt",
+    "/proc",
+    "/root",
+    "/tmp",
     "/usr",
     "/usr/bin",
-    "/home"
+    "/usr/bin/aurora",
+    "/usr/lib",
+    "/usr/local",
+    "/usr/sbin",
+    "/usr/share",
+    "/var",
+    "/var/crash",
+    "/var/log"
   ],
   "packages": [
+    "systemWrapper",
+    "node",
+    "man",
     "ls",
     "pwd",
     "clear",
@@ -37,6 +59,12 @@
     "killall",
     "build",
     "upgrade",
-    "export"
+    "export",
+    "aquila",
+    "lara",
+    "test",
+    "tree",
+    "yes",
+    "aurora"
   ]
 }
