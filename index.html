@@ -86,10 +86,20 @@
 <script>
     function search(event) {
         let value = event.which;
-        if(value === 13){
+
+        if (value === 13){
+            console.log("Command Submitted to run")
+            
             event.preventDefault();
-            system.eval(system.input.value, system.dir + " % ")
-            system.input.value = ""
+            
+            const input = document.getElementById("input")
+
+            if (csw) {
+                window.cliEval(input.value, csw.terminal.dir + " % ")
+            } else {
+                window.cliEval(input.value, "% ")
+            }
+            input.value = ""
         }
         }
 </script>
