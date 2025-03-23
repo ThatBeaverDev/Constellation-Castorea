@@ -22,15 +22,28 @@ async function init() {
 
 		system.languages = {}
 		system.langBackend = {}
-		system.languages.js = function(dir) {
+		system.languages.js = function(dir, safe) {
 			let code = system.files.get(dir)
 			if (system.forceSystemLog) {
-				code = code.replaceAll("console.log(", "system.log(Name,")
-				code = code.replaceAll("console.post(", "system.post(Name,")
-				code = code.replaceAll("console.warn(", "system.warn(Name,")
-				code = code.replaceAll("console.error(", "system.error(Name,")
-				code = code.replaceAll("console.edit(", "system.editLog(Name,")
+				if (system.systemWrapper) {
+					code = code.replaceAll("console.log(", "csw.console.log(Name,")
+					code = code.replaceAll("console.post(", "csw.console.post(Name,")
+					code = code.replaceAll("console.warn(", "csw.console.warn(Name,")
+					code = code.replaceAll("console.error(", "csw.console.error(Name,")
+					code = code.replaceAll("console.edit(", "csw.console.edit(Name,")
+
+					for (const i in csw.functions) {
+						code = code.replaceAll(csw.functions[i] + "(", csw.functions[i] + "(token,")
+					}
+				} else {
+					code = code.replaceAll("console.log(", "system.log(Name,")
+					code = code.replaceAll("console.post(", "system.post(Name,")
+					code = code.replaceAll("console.warn(", "system.warn(Name,")
+					code = code.replaceAll("console.error(", "system.error(Name,")
+					code = code.replaceAll("console.edit(", "system.editLog(Name,")
+				}
 			}
+
 			return code
 		}
 
@@ -57,46 +70,121 @@ async function init() {
 			return result
 		}
 
-		system.startProcess = async function(dir, args) {
+		system.startProcess = function(dir, args, isUnsafe) {
+			try {
 			if (system.files.get(dir) == undefined) {
 				return
 			}
-			system.preScript = "const PID = " + system.procCount + ";"
-			system.preScript += "const Name = '" + dir + "';"
-			system.preScript += "const args = JSON.parse('" + JSON.stringify((args || [])) + "');"
+			let preScript = "const PID = " + system.procCount + ";"
+			preScript += "const Name = '" + dir + "';"
+			preScript += "const args = JSON.parse('" + JSON.stringify((args || [])) + "');"
+			preScript += "const elevated = " + !isUnsafe + ";"
+			preScript += "const token = " + 0 + ";"
+			preScript += "const local = lcl;"
+			if (isUnsafe) {
+				preScript += "const system = ssm;"
+			}
 			let obj = {}
 			let code
-			let type = String(dir).substring(String(dir).indexOf(".") + 1)
-			code = system.languages[type](dir)
-			code = system.preScript + code
-			obj.code = code
-			obj.args = args
-			obj.variables = {}
-			obj.variables.window = {}
+			let type = "js"
+			const file = system.files.get(dir)
+			if (file.substring(0, 3) == "#! ") {
+				const split = file.split("\n")
+				const handler = split[0].substring(3)
+				const handleFunc = new Function("code", "safe", "system", system.files.get(handler))
+				split.shift()
+				code = handleFunc(split.join("\n"), !isUnsafe, system)
+			} else {
+				type = String(dir).substring(String(dir).indexOf(".") + 1)
+				code = system.languages[type](dir)
+			}
+
+			//if (isUnsafe === true) {} else {
+			//	if ((String(code.includes("system")))) {
+			//		throw new Error("Code is not allowed to directly access system: " + dir)
+			//	}
+			//}
+
 			obj.PID = system.procCount
 			obj.name = dir
-			system.processes[system.procCount] = obj
-			system.procCount++
-			if (system.safe) {
-				await eval(obj.code + "\ntry {init(args) } catch(e) {  system.error(e, Name)  }")
+			obj.isUnsafe = isUnsafe
+			obj.args = args
+			obj.variables = {}
+
+			code = preScript + code
+			obj.code = code
+
+			system.systemWrapper = Boolean(system.systemWrapper)
+
+			if (isUnsafe) {
+				if (system.safe && system.systemWrapper) {
+					// safe mode, unsafe and systemWrapper
+					obj.frame = new Function("lcl", "ssm", obj.code + "\ntry {  frame(args) } catch(e) {  csw.console.error(token, Name, e)  }")
+					obj.init = new Function("lcl", "ssm", obj.code + "\ntry {  init(args) } catch(e) {  csw.console.error(token, Name, e)  }")
+				}
+				if (system.safe && !system.systemWrapper) {
+					// safe mode, unsafe, no systemWrapper
+					obj.frame = new Function("lcl", "ssm", obj.code + "\ntry {  frame(args) } catch(e) {  system.error(Name, e)  }")
+					obj.init = new Function("lcl", "ssm", obj.code + "\ntry {  init(args) } catch(e) {  system.error(Name, e)  }")
+				}
+
+				if (!system.safe) {
+					// no safe mode, unsafe
+					obj.frame = new Function("lcl", "ssm", obj.code + "\nframe(args)")
+					obj.init = new Function("lcl", "ssm", obj.code + "\ninit(args)")
+				}
 			} else {
-				await eval(obj.code + "\ninit(args)")
+				if (system.safe && system.systemWrapper) {
+					// safe mode, not unsafe, systemWrapper
+					obj.frame = new Function("lcl", obj.code + "\ntry {  frame(args) } catch(e) {  csw.console.error(token, Name, e)  }")
+					obj.init = new Function("lcl", obj.code + "\ntry {  init(args) } catch(e) {  csw.console.error(token, Name, e)  }")
+				}
+				if (system.safe && !system.systemWrapper) {
+					// safe mode, not unsafe, no systemWrapper
+					obj.frame = new Function("lcl", obj.code + "\ntry {  frame(args) } catch(e) {  system.error(Name, e)  }")
+					obj.init = new Function("lcl", obj.code + "\ntry {  init(args) } catch(e) {  system.error(Name, e)  }")
+				}
+
+				if (!system.safe) {
+					// no safe mode, not unsafe
+					obj.frame = new Function("lcl", obj.code + "\nframe(args)")
+					obj.init = new Function("lcl", obj.code + "\init(args)")
+				}
 			}
-			return system.procCount - 1
+			
+			system.processes[obj.PID] = obj
+			system.procCount++
+
+			const count = system.procCount - 1
+
+			if (isUnsafe) {
+				obj.init(system.processes[count].variables, system)
+			} else {
+				obj.init(system.processes[count].variables)
+			}
+
+			return count
+			} catch(e) {
+				console.warn(e)
+				system.error(Name + ": startProcess", e)
+			}
 		}
 
 		system.stopProcess = function(PID) {
-			system.processes.splice(Number(PID), 1)
+			delete system.processes[Number(PID)]
 		}
 
-		system.toDir = function toDir(dir) {
+		system.toDir = function toDir(dir, baseDir) {
+			const bDir = (baseDir || system.dir)
+
+
 			if (dir[0] == "/") {
 				return (dir)
 			} else {
-				if (system.dir[system.dir.length - 1] == "/") {
-					return (system.dir + dir)
+				if (bDir[bDir.length - 1] == "/") {
+					return (bDir + dir)
 				} else {
-					return (system.dir + "/" + dir)
+					return (bDir + "/" + dir)
 				}
 			}
 		}
@@ -122,37 +210,18 @@ async function init() {
 			}
 
 			// fetch Aurora (package manager)
-			obj = await system.fetchURL(system.aurora.url + "/aurora.js")
+			obj = await system.fetchURL(system.baseURI + "/boot/aurora-min.js")
 			system.files.writeFile("/bin/aurora.js", obj)
+		} else {
+			system.folders.deleteDirectory("/var", true)
+			system.folders.writeFolder("/var")
+			system.folders.writeFolder("/var/crash")
+			system.folders.writeFolder("/var/logs")
 		}
 
-		// initiate system to run terminal commands, including PATH
+		// initiate PATH
 
 		system.path = JSON.parse(system.files.get("/etc/path.json"))
-
-		system.eval = async function(code, pre, silent) {
-			if (!silent) system.post("", pre + code)
-			let segments = String(code).split(" ")
-			const path = system.path
-			let cmd
-			for (const i in path) {
-				let temp = path[i] + "/" + segments[0] + ".js"
-				if (system.files.get(temp) !== undefined) {
-					cmd = String(temp)
-					break;
-				}
-			}
-			if (system.files.get(cmd) == undefined) {
-				//system.log(Name,"command not found:  " + segments[0])
-				try {
-					system.post("", eval(code))
-				} catch (e) {
-					system.post("", "Unknown Command: " + code + ". it is not valid JavaScript OR a valid Terminal command.")
-				}
-			} else {
-				system.startProcess(cmd, segments.slice(1))
-			}
-		}
 
 		system.installed = false
 
@@ -164,7 +233,7 @@ async function init() {
 			system.installed = true
 		}
 
-		setInterval(function () {
+		setInterval(function() {
 			if (system.running) {
 				return
 			} else if (system.installed) {
@@ -173,78 +242,125 @@ async function init() {
 			}
 		}, 100)
 	} catch (e) {
-		system.error("Kernel Panic in init - " + e.stack)
+		throw new Error("Kernel Panic in init - " + e.stack)
 	}
 }
 
 async function lateInit() {
 	const Name = "/boot/kernel.js"
 	const PID = -1
-		try {
 
-		system.log(Name, "Starting systemC...")
-		system.user = "sudo"
-		system.startProcess("/usr/bin/systemc/systemC.js").then()
-		if (!system.systemC) {
-			system.error(Name,"systemC not running! System may Behave Weirdly!")
+
+	// start user system
+	system.user = "root"
+	system.users = JSON.parse(system.files.get("/etc/passwd.json"))
+
+	// function to register users
+	system.users.register = function(name, obj) {
+
+		if (system.users[name] !== undefined) {
+			throw new Error("user named " + name + " already exists!")
 		}
 
-		system.input = document.getElementById('input');
-		system.input.focus()
-		system.preInput = document.getElementById('preInput');
-		system.preInput.innerText = system.dir + " % " + system.inputText
-
-		// INPUT
-		system.keys = {}
-		document.addEventListener('keydown', (e) => {
-			system.keys[e.key] = true
-			if (e.keyCode == 32 && e.target == document.body) {
-				e.preventDefault();
-			}
-			let cmdKey = "Control"
-			if (navigator.userAgentData.platform == "macOS") {
-				cmdKey = "Meta"
-			}
-			if (system.keys[cmdKey]) {
-				switch (e.key) {
-					//case "r":
-					//	e.preventDefault();
-					//	break;
-				}
-				return
-			}
-			system.input.innerText = system.dir + " % " + system.inputText
-		});
-
-		document.addEventListener('keyup', (e) => {
-			system.keys[e.key] = false
-		})
-
-		system.log(Name, "Beginning to run processes...")
-
-
-		var runtime = setInterval(function() {
-			system.files.writeFile("/etc/path.json", JSON.stringify(system.path))
-			system.input.focus()
-			for (let i = 0; i < system.processes.length; i++) {
-				if (system.processes[i] !== undefined) {
-					if (String(system.processes[i].code).includes("frame()")) {
-						if (system.safe) {
-							eval(system.processes[i].code + "\ntry {frame() } catch(e) {  system.error(e, Name)  }")
-						} else {
-							eval(system.processes[i].code + "\nframe()")
-						}
-					} else {
-						system.stopProcess(i)
-					}
-				} else {}
-			}
-		}, 160);
-
-		setInterval(system.localFS.commit, 5000)
-	} catch (e) {
-		system.error("Kernel Panic in lateInit / Runtime - " + e.stack)
+		obj.userID = system.users.amount
+		if (obj.password == undefined) {
+			console.warn("User password was not defined: it is set to 'default'")
+		}
+		obj.password = system.cryptography.sha_256(obj.password || "default")
+		system.users[name] = obj
+		if (system.folders[obj.baseDir] == undefined) {
+			throw new Error("User base directory is not created")
+		} else {
+			system.folders.writeFolder(obj.homeDir)
+		}
 	}
+
+	system.log(Name, "Starting Wrapper...")
+	await system.startProcess("/boot/systemWrapper.js", {}, true)
+	if (!system.systemWrapper) {
+		system.error(Name, "systemWrapper not running! System may Behave Weirdly!")
+	}
+
+	system.log(Name, "Starting systemC...")
+	await system.startProcess("/usr/bin/systemc/systemC.js", {}, true)
+	if (!system.systemC) {
+		system.error(Name, "systemC not running! System may Behave Weirdly!")
+	}
+
+	system.input = document.getElementById('input');
+	system.input.focus()
+	system.preInput = document.getElementById('preInput');
+	system.preInput.innerText = system.dir + " % " + system.inputText
+
+	// INPUT
+	system.keys = {}
+	document.addEventListener('keydown', (e) => {
+		system.keys[e.key] = true
+		if (e.keyCode == 32 && e.target == document.body) {
+			e.preventDefault();
+		}
+		let cmdKey = "Control"
+		if (navigator.userAgentData.platform == "macOS") {
+			cmdKey = "Meta"
+		}
+		if (system.keys[cmdKey]) {
+			switch (e.key) {
+				//case "r":
+				//	e.preventDefault();
+				//	break;
+			}
+			return
+		}
+		system.input.innerText = system.dir + " % " + system.inputText
+	});
+
+	document.addEventListener('keyup', (e) => {
+		system.keys[e.key] = false
+	})
+
+	system.log(Name, "Beginning to run processes...")
+
+	system.runProcesses = function() {
+
+		if (system.logsFocus == undefined) {
+			system.input.focus()
+		}
+
+		if (system.preInput && system.logsFocus == undefined) {
+			system.preInput.innerHTML = system.dir + " % "
+		}
+
+		const processIDs = Object.keys(system.processes)
+
+		for (const i in processIDs) {
+			const obj = system.processes[processIDs[i]]
+			//console.log(obj)
+			if (obj !== undefined) {
+				if (String(obj.code).includes("frame()")) {
+					try {
+						if (obj.isUnsafe) {
+							obj.frame(obj.variables, system)
+						} else {
+							obj.frame(obj.variables)
+						}
+					} catch(e) {
+						system.error(Name + ": processRunner running " + obj.name, e)
+					}
+				} else {
+					system.stopProcess(processIDs[i])
+				}
+			}
+		}
+	}
+
+	var runtime = setInterval(system.runProcesses);
+
+	setInterval(system.localFS.commit, 5000)
+	setInterval(function() {
+		system.files.writeFile("/etc/path.json", JSON.stringify(system.path))
+		system.files.writeFile("/etc/passwd.json", JSON.stringify(system.users))
+	}, 1000)
 }
 
+const system = ssm
 init()
