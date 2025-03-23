@@ -6,7 +6,7 @@ async function install() {
     const index = JSON.parse(i).packages
 
     for (const i in index) {
-        system.eval("aurora install " + index[i], "", true)
+        system.startProcess("/bin/aurora.js", ["install",index[i]], true)
     }
 
     system.installed = true
