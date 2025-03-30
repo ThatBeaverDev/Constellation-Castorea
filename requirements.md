@@ -1,3 +1,3 @@
-# Browser Requirements to run Constellinux CLI are as follows:
+# Browser Requirements to run nordOS are as follows:
 - `crypto.subtle`
-- Filesystem API
+- Filesystem API (recommended)
