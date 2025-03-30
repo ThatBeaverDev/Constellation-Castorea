@@ -15,9 +15,7 @@
       "parse": true
     },
     "/dev/null",
-    "/dev/urandom",
-    "/boot/init",
-    "/boot/setup.js"
+    "/dev/urandom"
   ],
   "folders": [
     "/bin",
@@ -83,6 +81,7 @@
     "whoami",
     "sudo",
     "du",
+    "setup",
     "aurora"
   ]
 }
