@@ -1,12 +1,23 @@
 {
   "files": [
-    "/boot/kernel.js",
+    "/boot/castoreaKernel.js",
     "/boot/loader.js",
-    "/boot/install.js",
-    "/etc/path.json",
-    "/etc/passwd.json",
+    {
+      "dir": "/etc/path.json",
+      "parse": true
+    },
+    {
+      "dir": "/etc/passwd",
+      "parse": true
+    },
+    {
+      "dir": "/etc/group.json",
+      "parse": true
+    },
     "/dev/null",
-    "/dev/urandom"
+    "/dev/urandom",
+    "/boot/init",
+    "/boot/setup.js"
   ],
   "folders": [
     "/bin",
@@ -19,18 +30,21 @@
     "/mnt",
     "/opt",
     "/proc",
-    "/root",
     "/tmp",
     "/usr",
     "/usr/bin",
     "/usr/bin/aurora",
     "/usr/lib",
+    "/usr/include",
+    "/usr/libexec",
     "/usr/local",
     "/usr/sbin",
     "/usr/share",
     "/var",
     "/var/crash",
-    "/var/log"
+    "/var/mail",
+    "/var/src",
+    "/var/tmp"
   ],
   "packages": [
     "systemWrapper",
@@ -61,9 +75,14 @@
     "upgrade",
     "export",
     "aquila",
+    "useradd",
     "lara",
     "tree",
     "yes",
+    "su",
+    "whoami",
+    "sudo",
+    "du",
     "aurora"
   ]
 }
