@@ -1,108 +1,52 @@
 <!DOCTYPE html>
 <html>
-    <head>
-        <title>Constellinux Shell</title>
-        <link rel="stylesheet" href="/styles.css"><!--styles-->
-        <link rel="preconnect" href="https://fonts.googleapis.com">
-        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-        <link href="https://fonts.googleapis.com/css2?family=Source+Code+Pro:ital,wght@0,200..900;1,200..900&display=swap" rel="stylesheet">
-        <link href="https://fonts.googleapis.com/css2?family=Noto+Sans:ital,wght@0,100..900;1,100..900&display=swap" rel="stylesheet">
-        <meta property="og:title" content="Constellinux Shell">
-        <meta property="og:description" content="Constellinux Shell is an online Shell, written in JS. It is where modern CRL is ran.">
-        <meta property="og:image" content="https://thatbeaverdev.github.io/assets/Constellinux.jpeg">
-        <style>
-            body {
-                user-select: none;
-            }
-            #logsBox, #input, #preInput {
-                font-family: "Source Code Pro", serif;
-                font-optical-sizing: auto;
-                font-weight: 450;
-                font-style: normal;
-                font-size: 16px;
-                white-space: pre;
-                margin-top: 25px;
-            }
 
-            #logsBox, #preInput {
-                margin-left: 25px;
-            }
+<head>
+  <title>nordOS</title>
+  <link rel="stylesheet" href="/styles.css">
+  <!--styles-->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Source+Code+Pro:ital,wght@0,200..900;1,200..900&display=swap"
+    rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans:ital,wght@0,100..900;1,100..900&display=swap"
+    rel="stylesheet">
+  <meta property="og:title" content="nordOS">
+  <meta property="og:description"
+    content="nordOS is a web-based system, with the intent to be as UNIX / POSIX compliant as it can be.">
+  <meta property="og:image" content="https://thatbeaverdev.github.io/assets/nordOS.jpeg">
+  <link href="/styles.css" rel="stylesheet">
+  <style>
+    body {
+      width: 90vw;
+      overflow-x: hidden;
+    }
 
-            #log, #post, #warn, #error, #input, #preInput {
-                margin-top: 0px;
-                margin-bottom: 0px;
-                user-select: all;
-            }
-            #log {color: white;}
-            #post {color: white;}
-            #warn {color: orange;}
-            #error {color: red;}
+    #display {
+      font-family: "Source Code Pro", serif;
+      font-optical-sizing: auto;
+      font-weight: 450;
+      font-style: normal;
+      font-size: 16px;
+      white-space: pre;
+      width: 100%;
+    }
+  </style>
+</head>
+<div id="mainHeader"></div>
 
-            #input {
-                width: 100%;
-                height: auto;
-            }
-
-            #gui {
-                width: 100vw;
-                height: 100vh;
-                top: 0px;
-                left: 0px;
-                position: absolute;
-                background-position: center center;
-                background-repeat: no-repeat;
-                background-size: cover;
-                z-index: 3;
-            }
-
-            #input {
-                width: 100%;
-                height: auto;
-                color: white;
-                background-color: rgba(0,0,0,0);
-                border: 0px;
-                left: 0px
-            }
-
-            #input:focus {
-                outline: none;
-            }
-
-            yellow {
-                color: yellow;
-            }
-        </style>
-        <link href="/styles.css" rel="stylesheet">
-    </head>
-    <div id="mainHeader"></div>
-    <body>
-        <div id="logsBox"></div>
-        <!--<p id="inputBox">systemDefaultInputBoxText</p>-->
-        <div style="display: flex; justify-content: space-around">
-            <p id="preInput">system is loading. if this text persists with no logs, the system may have crashed.</p>
-            <input type="text" id="input" onkeypress="search(event)">
-        </div>
-    </body>
-<script>
-    function search(event) {
-        let value = event.which;
-
-        if (value === 13){
-            console.log("Command Submitted to run")
-            
-            event.preventDefault();
-            
-            const input = document.getElementById("input")
-
-            if (csw) {
-                window.cliEval(input.value, csw.terminal.dir + " % ")
-            } else {
-                window.cliEval(input.value, "% ")
-            }
-            input.value = ""
-        }
-        }
-</script>
+<body>
+  <div id="display">
+    <div id="logoBox" style="display: flex; justify-content: space-around"></div>
+    <div id="logsBox" style="display: flex; justify-content: space-around"></div>
+    <div style="display: flex; justify-content: space-around">
+      <p id="preInput">system is loading. if this text persists with no logs, the system may have crashed.</p>
+      <!--<input type="text" id="input" onkeypress="search(event)">-->
+    </div>
+  </div>
+</body>
 <script src="/header.js"></script>
-<script src="./boot/loader.js"></script><!--bootloader-->
+<script src="./boot/loader.js"></script>
+<!--bootloader-->
+
 </html>
