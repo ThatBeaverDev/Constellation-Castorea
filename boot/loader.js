@@ -1,15 +1,15 @@
-// bootloader for Constellinux.
+// bootloader for nordOS / nordOS Based Systems.
 
 function checkIfCompatible() {
-    let obj = {
-        isCompatible: true
-    }
-    if ((crypto || {}).subtle == undefined) {
-        obj.isCompatible = false
-        obj.reason = "Crypto/subtle"
+	let obj = {
+		isCompatible: true
+	}
+	if ((crypto || {}).subtle == undefined) {
+		obj.isCompatible = false
+		obj.reason = "Crypto/subtle"
 		obj.showReason = "crypto.subtle"
-    }
-    return obj
+	}
+	return obj
 }
 
 function mustBootWithoutFSAPI() {
@@ -17,10 +17,10 @@ function mustBootWithoutFSAPI() {
 		noFS: false
 	}
 	if (window.showSaveFilePicker == undefined) {
-        obj.noFS = true
-        obj.reason = "File_System_API"
+		obj.noFS = true
+		obj.reason = "File_System_API"
 		obj.showReason = "Filesystem API"
-    }
+	}
 	return obj
 }
 
@@ -32,44 +32,37 @@ async function loader() {
 
 	const system = {
 		startTime: Date.now()
-    }
+	}
 
-    system.baseURI = "."
+	system.baseURI = "."
 
 	system.safe = false
 	system.forceSystemLog = true
 	system.processes = {}
-	system.procCount = 0
-	system.dir = "/"
+	system.maxPID = 0
 
 	system.inputText = ""
-	system.constellinux = {
-        loader: "v0.1"
-    }
+	system.versions = {
+		loader: "v0.3.0"
+	}
 	system.logsBox = document.getElementById("logsBox")
 	system.logs = []
 	logHTML = document.getElementById("termLOG")
 	logsHTML = document.getElementById("logs")
 
-	system.refreshLogsPanel = function(text) {
+	system.refreshLogsPanel = function (text) {
 		if (system.logsFocus == undefined) {
 			let data = ""
-	
-			if (system.logs.length > 5000) {
-				//system.warn(Name,"Logs length is over 100,000")
-				system.logsBox.innerHTML = "Logs are too long to be displayed."
-				console.log(system.logs.length)
-				return
-			}
-	
+
 			for (const i in system.logs) {
 				let temp = "<p id='" + system.logs[i].type + "'>"
 				temp += system.logs[i].content
 				temp += "</p>"
 				data += temp
 			}
-				
-			system.logsBox.innerHTML = data
+
+			//system.logsBox.innerHTML = data // comment out to remove the logsbox
+			return data
 		} else {
 			if (typeof system.processes[system.logsFocus] !== "object") {
 				delete system.logsFocus
@@ -77,12 +70,86 @@ async function loader() {
 			}
 
 			if (text == undefined) return
-			system.logsBox.innerHTML = text
-			system.preInput.innerHTML = ""
+			//system.logsBox.innerHTML = text // also comment out to remove the logsbox
+			try {
+				system.preInput.innerHTML = ""
+			} catch (e) {
+				// this is going to error, let's embrace it
+			}
+			return text
 		}
 	}
 
-	String.prototype.textAfter = function(after) {
+	system.log = function (origin, str) {
+		const obj = {
+			type: "log",
+			origin: origin,
+			content: (origin || Name) + ": " + system.cast.Stringify(str)
+		}
+		system.logs.push(obj)
+		console.log(str)
+		system.refreshLogsPanel()
+	}
+	system.post = function (origin, str) {
+		const obj = {
+			type: "post",
+			origin: origin,
+			content: system.cast.Stringify(str)
+		}
+		system.logs.push(obj)
+		console.log(str)
+		system.refreshLogsPanel()
+	}
+
+	system.warn = function (origin, str) {
+		const obj = {
+			type: "warn",
+			origin: origin,
+			content: (origin || Name) + ": " + system.cast.Stringify(str)
+		}
+		system.logs.push(obj)
+		console.warn(str)
+		system.refreshLogsPanel()
+	}
+	system.error = function (origin, str) {
+		console.error(`Error in ${origin}:`)
+		console.error(str)
+		const obj = {
+			type: "error",
+			origin: origin,
+			content: (origin || Name) + ": " + system.cast.Stringify(str)
+		}
+		system.logs.push(obj)
+		system.refreshLogsPanel()
+	}
+
+	// INPUT
+	system.keys = {}
+	document.addEventListener('keydown', (e) => {
+		system.keys[e.key] = true
+		if (e.keyCode == 32 && e.target == document.body) {
+			e.preventDefault();
+		}
+		let cmdKey = "Control"
+		if (navigator.userAgentData.platform == "macOS") {
+			cmdKey = "Meta"
+		}
+
+		if (system.keys[cmdKey]) {
+			switch (e.key) {
+				//case "r":
+				//	e.preventDefault();
+				//	break;
+			}
+			return
+		}
+	});
+
+	document.addEventListener('keyup', (e) => {
+		system.keys[e.key] = false
+	})
+
+	String.prototype.textAfter = function (after) {
 		let res = ""
 		for (let i = 0; i < this.length; i++) {
 			res += this[i]
@@ -91,7 +158,7 @@ async function loader() {
 		return res.substring(res.indexOf(after) + 1)
 	}
 
-	String.prototype.textBefore = function(before) {
+	String.prototype.textBefore = function (before) {
 		let res = ""
 		for (let i = 0; i < this.length; i++) {
 			res += this[i]
@@ -100,7 +167,7 @@ async function loader() {
 		return res.substring(0, res.indexOf(before))
 	}
 
-	String.prototype.textAfterAll = function(after) {
+	String.prototype.textAfterAll = function (after) {
 		let res = ""
 		for (let i = 0; i < this.length; i++) {
 			res += this[i]
@@ -116,10 +183,10 @@ async function loader() {
 		}
 		try {
 			return (JSON.parse(obj))
-		} catch (e) {}
+		} catch (e) { }
 		try {
 			return (obj)
-		} catch (e) {}
+		} catch (e) { }
 	}
 
 	system.cast.Stringify = function Stringify(str, beautify) {
@@ -133,100 +200,25 @@ async function loader() {
 		return (String(str))
 	}
 
-	system.log = function(origin, str) {
-		const obj = {
-			type: "log",
-			origin: origin,
-			content: (origin || Name) + ": " + system.cast.Stringify(str),
-			origin: origin
-		}
-		system.logs.push(obj)
-		console.log(str)
-		system.refreshLogsPanel()
-		return system.logs.length - 1
-	}
-	system.post = function(origin, str) {
-		const obj = {
-			type: "post",
-			origin: origin,
-			content: system.cast.Stringify(str),
-			origin: origin
-		}
-		system.logs.push(obj)
-		console.log(str)
-		system.refreshLogsPanel()
-		return system.logs.length - 1
-	}
-
-	system.warn = function(origin, str) {
-		const obj = {
-			type: "warn",
-			origin: origin,
-			content: (origin || Name) + ": " + system.cast.Stringify(str),
-			origin: origin
-		}
-		system.logs.push(obj)
-		console.warn(str)
-		system.refreshLogsPanel()
-		return system.logs.length - 1
-	}
-	system.error = function(origin, str) {
-		console.error(`Error in ${ origin }:`)
-		console.error(str)
-		const obj = {
-			type: "error",
-			origin: origin,
-			content: (origin || Name) + ": " + system.cast.Stringify(str)
-		}
-		system.logs.push(obj)
-		system.refreshLogsPanel()
-		return system.logs.length - 1
-	}
-
-	system.editLog = function(origin, str, id, newType) {
-		let obj = ""
-		switch (system.logs[id].type) {
-			case "post":
-				obj = {
-					type: (newType || "post"),
-					content: system.cast.Stringify(str),
-					origin: origin
-				}
-				break;
-			default:
-				obj = {
-					type: (newType || system.logs[id].type),
-					content: (origin || Name) + ": " + system.cast.Stringify(str),
-					origin: origin
-				}
-		}
-		if (origin == system.logs[id].origin) {
-			system.logs[id] = obj
-			system.refreshLogsPanel()
-		} else {
-			system.warn("Program " + origin + " has attemped to overwrite a log of a different program, log ID: " + system.logs[id].origin)
-		}
-	}
-
-	system.setParam = function(name, value) {
+	system.setParam = function (name, value) {
 		var s = new URLSearchParams(location.search);
 		s.set(String(name), String(value));
 		history.replaceState("", "", "?" + s.toString());
 	}
 
-	system.getParam = function(name) {
+	system.getParam = function (name) {
 		return new URLSearchParams(location.search).get(String(name))
 	}
 
-    obj = checkIfCompatible()
+	obj = checkIfCompatible()
 
-    if (!obj.isCompatible) {
-        system.error(Name,"Sorry, but your browser is not compatible with This System.")
+	if (!obj.isCompatible) {
+		system.error(Name, "Sorry, but your browser is not compatible with This System.")
 		if (obj.showReason == undefined) obj.Showreason = obj.reason
-        system.error(Name,'Reason is your browser does not support <a href="https://developer.mozilla.org/en-US/docs/Web/API/' + obj.reason + '">' + obj.showReason + '</a>')
-        document.getElementById("preInput").innerText = ""
-        return
-    }
+		system.error(Name, 'Reason is your browser does not support <a href="https://developer.mozilla.org/en-US/docs/Web/API/' + obj.reason + '">' + obj.showReason + '</a>')
+		document.getElementById("preInput").innerText = ""
+		return
+	}
 
 	system.fsAPI = true
 
@@ -239,14 +231,12 @@ async function loader() {
 
 	obj = mustBootWithoutFSAPI()
 
-	console.log(obj)
-
 	if (obj.noFS) {
 		system.warn(Name, "Attempting to boot without the filesystem API, things might get a bit rocky...")
 		system.fsAPI = false
 	}
 
-    delete obj
+	delete obj
 
 	system.fetchURL = async function fetchURL(url) {
 		console.log("fetchURL request to " + url)
@@ -255,24 +245,108 @@ async function loader() {
 		if (response.ok) {
 			return data;
 		} else {
-            console.warn(response)
+			console.warn(response)
 			return undefined
 		}
 	}
 
+	system.asciiName = await system.fetchURL('./nameAscii.txt')
+	document.getElementById("logoBox").innerHTML = system.asciiName
 
 	// START FILESYSTEM
-	system.folders = {} // foldersSet
-	obj = {}
-	obj.id = 0
-	obj.contents = "/"
-	obj.directory = "/"
-	obj.children = {}
-	system.folders["/"] = obj
-	system.files = {} // filesSet
-	system.files.count = 1
-	system.files.encrypt = true
-
+	system.fs = {} // foldersSet
+	system.fs.directory = class directory {
+		
+		children = {}
+		accessPerms = {}
+		
+		constructor(owner) {
+			this.accessPerms[owner] = {
+				read: true,
+				write: true
+			}
+		}
+		
+		list() {
+			return Object.keys(this.children)
+		}
+		
+		writeFile(filename, contents) {
+			let char = filename.lastIndexOf(".")
+			const ext = filename.substring(char + 1)
+			
+			const File = new system.fs.file(ext, contents)
+			this.children[filename] = File
+		}
+		
+		deleteFile(filename) {
+			delete this.children[filename]
+		}
+		
+		createLink(filename, target) {
+			const ln = new system.fs.link(target)
+			
+			this.children[filename] = ln
+		}
+		
+		createAlias(filename, target) {
+			this.createLink(filename, target)
+			this.children[filename].type = "alias"
+		}
+	}
+	
+	system.fs.file = class file {
+		constructor(ext, content) {
+			if (ext == undefined || content == undefined) {
+				throw new Error("extension and content MUST be defined when creating a file.")
+			}
+			
+			const byteSize = str => new Blob([str]).size;
+			
+			this.type = `.${ext}`
+			this.contents = content
+			
+			
+			this.created = Date.now()
+			this.edited = this.created
+			this.accessPerms = {}
+			
+			
+			this.size = byteSize(JSON.stringify(this))
+			this.size = byteSize(JSON.stringify(this))
+		}
+		
+		getAttribute(attribute) {
+			return this[attribute]
+		}
+		
+		updateContents(contents) {
+			this.contents = contents
+			this.edited = Date.now()
+		}
+	}
+	
+	
+	system.fs.link = class link {
+		constructor(target) {
+			if (target == undefined) {
+				throw new Error("target MUST be defined when creating a link.")
+			}
+			
+			const byteSize = str => new Blob([str]).size;
+			
+			this.type = "dir"
+			this.target = target
+			
+			this.created = Date.now()
+			this.edited = this.created
+			this.accessPerms = {}
+			
+			this.size = byteSize(JSON.stringify(this))
+			this.size = byteSize(JSON.stringify(this))
+		}
+	}
+	
 	function getDirInfo(dirOld) {
 		const obj = {}
 		let dir = String(dirOld) // use to replace ~ with home dir in future
@@ -282,245 +356,118 @@ async function loader() {
 		}
 		obj.location = location
 		obj.filename = dir.substring(dir.lastIndexOf("/") + 1)
+		obj.ext = obj.filename.substring(obj.filename.lastIndexOf(".") + 1)
 		obj.dir = dir
-
-		obj.parent = system.folders[obj.location]
-		obj.link = obj.parent.children[obj.filename]
-		if (obj.link == undefined) {
-			obj.body = undefined
-		} else {
-			obj.body = system.files[obj.link.id]
-		}
 		return obj
 	}
-
-	system.files.writeFile = function writeFile(dir, content) {
-		try {
-			const obj = getDirInfo(dir)
-
-			const folder = system.folders[obj.location].children
-
-			let id
-
-			if (folder[obj.filename] !== undefined) {
-				// file already exists, just overwrite the contents
-				id = folder[obj.filename].id
-
-				system.files[id].contents = system.cryptography.aesCtrEncrypt(content, "ConstellinuxEncode", 256)
-			} else {
-				// file doesn't already exist here
-				id = system.files.count
-
-				// create file link
-				const fileLink = {}
-				fileLink.id = id
-				fileLink.type = "file"
-				// add to FS
-				folder[obj.filename] = fileLink
-
-				// create file
-				const file = {}
-				file.id = id
-				file.type = "file"
-				file.directory = obj.dir
-				if (system.files.encrypt) {
-					file.contents = system.cryptography.aesCtrEncrypt(content, "ConstellinuxEncode", 256)
-				} else {
-					file.contents = content
-				}
-				// add to FS
-				system.files[id] = file
-
-				system.files.count++
-			}
 	
-		} catch (e) {
-			system.error(Name, "Error Writing to File at " + dir + ": " + e)
-			return false
-		}
-		return true
+	function rawFile(directory) {
+		const obj = getDirInfo(directory)
+		return system.fs[obj.location].children[obj.filename]
 	}
 
-	system.folders.writeFolder = function writeFolder(dir) {
+	system.fs.rawFile = rawFile
+	
+	// FILES!
+
+	system.fs["/"] = new system.fs.directory()
+	
+	system.fs.writeFile = function (directory, content) {
+		const obj = getDirInfo(directory)
+		
+		if (system.fs[obj.location].children[obj.filename] !== undefined) {
+			const file = rawFile(directory)
+			file.updateContents(content)
+			return true
+		}
+		
+		const file = new system.fs.file(obj.ext, content)
+		system.fs[obj.location].children[obj.filename] = file
+		return true
+	}
+	
+	system.fs.readFile = function (directory, attribute) {
 		try {
-			const obj = getDirInfo(dir)
-
-			const fldr = obj.parent.children
-
-			let id
+			const obj = getDirInfo(directory)
 			
-			id = system.files.count
+			const file = system.fs[obj.location].children[obj.filename]
 
-			// create file link
-			const fileLink = {}
-			fileLink.id = id
-			fileLink.type = "folder"
-			// add to FS
-			fldr[obj.filename] = fileLink
-
-			// create 'file'
-			const file = {}
-			file.id = id
-			file.type = "folder"
-			file.directory = obj.dir
-			system.files[id] = file
-
-			// create folder
-			const folder = {}
-			folder.id = id
-			folder.contents = obj.dir
-			folder.directory = obj.dir
-			folder.children = {}
-			// add to FS
-			system.folders[obj.dir] = folder
-
-			system.files.count++
+			if (file == undefined) {
+				return undefined
+			}
+			
+			return file[attribute || "contents"]
 		} catch (e) {
-			system.error(Name, "Error Creating Folder at " + dir + ": " + e)
-			return false
-		}
-		return true
-	}
-
-	system.files.get = function get(dir) {
-		try {
-			switch(dir) {
-				case "/dev/null":
-					return null
-				case "/dev/urandom":
-					return Math.random()
-				default:
-					// get dir info
-					const obj = getDirInfo(dir)
-					
-					const folder = system.folders[obj.location].children
-		
-					const fileLink = folder[obj.filename]
-		
-					if (fileLink == undefined) {
-						return
-					}
-		
-					if (fileLink.type !== "file") {
-						return "Type is not file"
-					}
-		
-					const file = system.files[fileLink.id]
-		
-					if (system.files.encrypt) {
-						return system.cryptography.aesCtrDecrypt(file.contents, "ConstellinuxEncode", 256)
-					} else {
-						return file.contents
-					}
-			}
-		} catch (e) {
-			return
-		}
-	}
-
-	system.folders.listDirectory = function listDirectory(dirOld) {
-		try {
-			let dir = String(dirOld) // use to replace ~ with home dir in future
-			let location = dir.substring(0, dir.lastIndexOf("/"))
-			if (location == "") {
-				location = "/"
-			}
-			if (location[location.length - 1] !== "/") {
-				location += "/"
-			}
-			location += dir.substring(dir.lastIndexOf("/") + 1)
-			return Object.keys(system.folders[location].children)
-		} catch (e) {
-			return []
-		}
-	}
-
-	system.folders.isDirectory = function isDirectory(dir) {
-		try {
-			if (dir == "/") {
-				return true
-			}
-
-			const obj = getDirInfo(dir)
-			const parent = system.folders[obj.location].children
-			const directory = parent[obj.filename]
-			return directory.type == "folder"
-
-		} catch(e) {
-			system.error(Name, "Error Checking if location is directory for " + String(dir) + ": " + e)
+			console.warn("readFile: " + e + " reading " + directory)
 			return undefined
 		}
 	}
-
-	system.folders.deleteDirectory = function deleteDirectory(dir, recursive, verbose) {
+	
+	system.fs.deleteFile = function (directory) {
 		try {
-			const obj = getDirInfo(dir)
-
-			const parent = system.folders[obj.location]
-
-			const folder = system.folders[obj.dir]
+			const obj = getDirInfo(directory)
 			
-			if (!recursive && Object.keys(folder.children).length !== 0) {
-				return {
-					result: false,
-					reason: "Directory contains files / folders and recursivity is disabled."
-				}
-			}
+			delete system.fs[obj.location].children[obj.filename]
+			
+			return system.fs[obj.location].children[obj.filename] == undefined
+		} catch (e) { }
+		
+		return undefined
+	}
+	
+	// FOLDERS!
 
-			function deleteDir(dir, verbose) {
-				const obj = getDirInfo(dir)
+	system.fs.writeFolder = function (directory) {
+		const obj = getDirInfo(directory)
 
-				const folder = system.folders[obj.dir]
-				const kids = folder.children
-				const children = Object.keys(kids)
-				
-				for (const i in children) {
-					let fullDir
-					if (obj.dir == "/") {
-						fullDir = obj.dir + children[i]
-					} else {
-						fullDir = obj.dir + "/" + children[i]
-					}
-					if (verbose) {
-						system.post(Name, fullDir)
-					}
+		const link = new system.fs.link(obj.dir)
+		const dir = new system.fs.directory()
 
-					if (system.folders.isDirectory(fullDir)) {
-						deleteDir(fullDir, verbose)
-					} else {
-						system.files.deleteFile(fullDir)
-					}
-				}
-
-				delete system.files[folder.id]
-				delete system.folders[obj.location].children[obj.filename]
-				delete system.folders[obj.dir]
-			}
-
-			deleteDir(obj.dir, verbose)
-		} catch(e) {
-			system.error(Name, "Error deleting directory for " + String(dir) + ": " + e)
-			return false
-		}
+		system.fs[obj.dir] = dir
+		system.fs[obj.location].children[obj.filename] = link
 	}
 
-	system.files.deleteFile = function deleteFile(dir) {
-		try {
-			const obj = getDirInfo(dir)
+	system.fs.deleteFolder = function (directory) {
+		const obj = getDirInfo(directory)
 
-			const parent = system.folders[obj.location]
+		const list = system.fs.rawFolder(directory).list()
 
-			const link = parent.children[obj.filename]
-			
-			const file = system.files[link.id]
+		let direct = String(directory)
 
-			delete system.files[link.id] // file
-			delete parent.children[obj.filename] // link
-		} catch (e) {
-			system.error(Name, "Error Deleting File File at " + String(dir) + ": " + e)
-			return
+		if (direct.at(-1) !== "/") {
+			direct += "/"
 		}
+
+		for (const i in list) {
+			const dir = direct + list[i]
+
+			if (system.fs.rawFile(dir).type == "dir") {
+				system.fs.deleteFolder(dir)
+			} else {
+				system.fs.deleteFile(dir)
+			}
+		}
+
+		delete system.fs[obj.location].children[obj.filename]
+		delete system.fs[directory]
 	}
+
+	system.fs.rawFolder = function (directory) {
+		return system.fs[directory]
+	}
+
+	system.fs.isFolder = function (directory) {
+		if (directory == "/") return true
+
+		const obj = getDirInfo(directory)
+
+		const link = system.fs[obj.location].children[obj.filename]
+
+		const type = link.type
+
+		return type == "dir"
+	}
+
 
 	// run cryptography so we can actually write to files
 
@@ -531,19 +478,19 @@ async function loader() {
 
 	system.localFS.options = {
 		startIn: 'documents',
-		suggestedName: 'Constellinux System.csys',
+		suggestedName: 'nordOS System.nordsys',
 		types: [{
-			description: "Constellinux Systems",
+			description: "nordOS Disk Images",
 			accept: {
-				"text/plain": [".csys"],
+				"text/plain": [".nordsys"],
 			},
-		}, ],
+		},],
 		excludeAcceptAllOption: true,
 		multiple: false,
 	};
 
 	// function to write to file
-	system.localFS.commit = async function() {
+	system.localFS.commit = async function () {
 		// check we have a filehandle, if not get one
 		if (system.fileHandle == undefined) {
 			system.fileHandle = await window.showSaveFilePicker()
@@ -555,8 +502,8 @@ async function loader() {
 
 		// build data to commit to file
 		const data = {}
-		data.folders = system.folders
-		data.files = system.files
+		data.fs = system.fs
+		data.version = "v0.3.0"
 		const writeData = JSON.stringify(data, null, 4)
 
 		// write our file
@@ -564,14 +511,12 @@ async function loader() {
 
 		// close the file and write the contents to disk.
 		await writableStream.close();
-        console.log("Filesystem commited to hostOS")
+		console.log("Filesystem commited to hostOS")
 	}
 
 	if (!system.fsAPI) {
-		system.localFS.commit = async function () {}
+		system.localFS.commit = async function () { }
 	}
-
-	system.warn(Name, "OS Will not boot if you do not select a file to boot.")
 
 	const handle = (e) => {
 		switch (e.key) {
@@ -600,24 +545,21 @@ async function loader() {
 	system.progress = false
 	system.selection = 0
 	system.options = ["Open", "New"]
-	document.getElementById('preInput').innerText = "Select an option from above to boot."
+	document.getElementById('preInput').innerText = "Select an option from above to boot nordOS."
 
-	const options = system.post(Name, "")
-	let exit = false
-	setInterval(function() {
-		if (exit) {
-			return
-		}
+
+	system.post("", "")
+	const loop = setInterval(function () {
 		if (system.progress) {
-            try {
-			bootOS(system.options[system.selection], system)
-			document.removeEventListener('keydown', handle)
-			exit = true
-            } catch(e) {
-                console.error(e)
-                system.progress = false
-            }
-			return;
+			try {
+				bootOS(system.options[system.selection], system)
+				document.removeEventListener('keydown', handle)
+			} catch (e) {
+				console.error(e)
+				system.progress = false
+			}
+			clearInterval(loop)
+			return
 		} else {
 			if (system.selection < 0) {
 				system.selection = 0
@@ -626,7 +568,10 @@ async function loader() {
 			}
 			const opt = JSON.parse(JSON.stringify(system.options))
 			opt[system.selection] = "> " + opt[system.selection]
-			system.editLog(Name, opt.join("\n"), options)
+
+			system.logs[0].content = opt.join("\n")
+			
+			system.logsBox.innerText = system.logs[0].content
 		}
 	}, 100)
 
@@ -634,7 +579,7 @@ async function loader() {
 
 async function bootOS(osName, ssm) {
 	const system = ssm
-    // delete bootloader keys
+	// delete bootloader keys
 	delete system.progress
 	delete system.selection
 	delete system.options
@@ -648,19 +593,19 @@ async function bootOS(osName, ssm) {
 
 			// extract the text of the file
 			const text = await fileData.text()
-			const sys = JSON.parse(text)
+			const data = JSON.parse(text)
 
-			system.folders = {
-				...system.folders,
-				...sys.folders
-			}
-			system.files = {
-				...system.files,
-				...sys.files
+			switch (data.version) {
+				case "v0.3.0":
+					system.fs = data.fs
+					break;
+				default:
+					throw new Error("Filesystem file not supported.")
 			}
 
-            // run kernel
-            castoreaKernel = system.files.get("/boot/kernel.js")
+
+			// run kernel
+			castoreaKernel = system.fs.readFile("/boot/kernel.js")
 			break;
 		case "new":
 			if (system.fsAPI) {
@@ -668,11 +613,11 @@ async function bootOS(osName, ssm) {
 			}
 			system.isNew = true
 
-            // fetch kernel since it's not present yet to be ran
-        	system.folders.writeFolder("/boot")
-            const kern = await system.fetchURL(system.baseURI + "/boot/kernel.js") // kernel download
-            system.files.writeFile("/boot/kernel.js", kern)
-            castoreaKernel = system.files.get("/boot/kernel.js")
+			// fetch kernel since it's not present yet to be ran
+			system.fs.writeFolder("/boot")
+			const kern = await system.fetchURL(system.baseURI + "/boot/castoreaKernel.js") // kernel download
+			system.fs.writeFile("/boot/castoreaKernel.js", kern)
+			castoreaKernel = system.fs.readFile("/boot/castoreaKernel.js")
 
 			break;
 		default:
@@ -680,11 +625,12 @@ async function bootOS(osName, ssm) {
 	}
 	castoreaKernel = new Function("ssm", castoreaKernel)
 	castoreaKernel(system)
-	
+
 }
 
-try {
-	loader()
-} catch(e) {
-	document.getElementById("logsBox").innerText = e.stack
-}
+//try {
+loader()
+//} catch (e) {
+//	console.error(e)
+//document.getElementById("logsBox").innerText = e.stack
+//}
