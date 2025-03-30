@@ -1,2 +1,2 @@
-# Constellinux
-Constellinux is a weird little system.
+# nordOS
+nordOS is a web-based system, with the intent to be as UNIX / POSIX compliant as it can be.
