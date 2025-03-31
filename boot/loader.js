@@ -256,97 +256,97 @@ async function loader() {
 	// START FILESYSTEM
 	system.fs = {} // foldersSet
 	system.fs.directory = class directory {
-		
+
 		children = {}
 		accessPerms = {}
-		
+
 		constructor(owner) {
 			this.accessPerms[owner] = {
 				read: true,
 				write: true
 			}
 		}
-		
+
 		list() {
 			return Object.keys(this.children)
 		}
-		
+
 		writeFile(filename, contents) {
 			let char = filename.lastIndexOf(".")
 			const ext = filename.substring(char + 1)
-			
+
 			const File = new system.fs.file(ext, contents)
 			this.children[filename] = File
 		}
-		
+
 		deleteFile(filename) {
 			delete this.children[filename]
 		}
-		
+
 		createLink(filename, target) {
 			const ln = new system.fs.link(target)
-			
+
 			this.children[filename] = ln
 		}
-		
+
 		createAlias(filename, target) {
 			this.createLink(filename, target)
 			this.children[filename].type = "alias"
 		}
 	}
-	
+
 	system.fs.file = class file {
 		constructor(ext, content) {
 			if (ext == undefined || content == undefined) {
 				throw new Error("extension and content MUST be defined when creating a file.")
 			}
-			
+
 			const byteSize = str => new Blob([str]).size;
-			
+
 			this.type = `.${ext}`
 			this.contents = content
-			
-			
+
+
 			this.created = Date.now()
 			this.edited = this.created
 			this.accessPerms = {}
-			
-			
+
+
 			this.size = byteSize(JSON.stringify(this))
 			this.size = byteSize(JSON.stringify(this))
 		}
-		
+
 		getAttribute(attribute) {
 			return this[attribute]
 		}
-		
+
 		updateContents(contents) {
 			this.contents = contents
 			this.edited = Date.now()
 		}
 	}
-	
-	
+
+
 	system.fs.link = class link {
 		constructor(target) {
 			if (target == undefined) {
 				throw new Error("target MUST be defined when creating a link.")
 			}
-			
+
 			const byteSize = str => new Blob([str]).size;
-			
+
 			this.type = "dir"
 			this.target = target
-			
+
 			this.created = Date.now()
 			this.edited = this.created
 			this.accessPerms = {}
-			
+
 			this.size = byteSize(JSON.stringify(this))
 			this.size = byteSize(JSON.stringify(this))
 		}
 	}
-	
+
 	function getDirInfo(dirOld) {
 		const obj = {}
 		let dir = String(dirOld) // use to replace ~ with home dir in future
@@ -360,58 +360,58 @@ async function loader() {
 		obj.dir = dir
 		return obj
 	}
-	
+
 	function rawFile(directory) {
 		const obj = getDirInfo(directory)
 		return system.fs[obj.location].children[obj.filename]
 	}
 
 	system.fs.rawFile = rawFile
-	
+
 	// FILES!
 
 	system.fs["/"] = new system.fs.directory()
-	
+
 	system.fs.writeFile = function (directory, content) {
 		const obj = getDirInfo(directory)
-		
+
 		if (system.fs[obj.location].children[obj.filename] !== undefined) {
 			const file = rawFile(directory)
 			file.updateContents(content)
 			return true
 		}
-		
+
 		const file = new system.fs.file(obj.ext, content)
 		system.fs[obj.location].children[obj.filename] = file
 		return true
 	}
-	
+
 	system.fs.readFile = function (directory, attribute) {
 		try {
 			const obj = getDirInfo(directory)
-			
+
 			const file = system.fs[obj.location].children[obj.filename]
 
 			if (file == undefined) {
 				return undefined
 			}
-			
+
 			return file[attribute || "contents"]
 		} catch (e) {
 			console.warn("readFile: " + e + " reading " + directory)
 			return undefined
 		}
 	}
-	
+
 	system.fs.deleteFile = function (directory) {
 		try {
 			const obj = getDirInfo(directory)
-			
+
 			delete system.fs[obj.location].children[obj.filename]
-			
+
 			return system.fs[obj.location].children[obj.filename] == undefined
 		} catch (e) { }
-		
+
 		return undefined
 	}
 	
@@ -457,15 +457,19 @@ async function loader() {
 	}
 
 	system.fs.isFolder = function (directory) {
-		if (directory == "/") return true
+		try {
+			if (directory == "/") return true
 
-		const obj = getDirInfo(directory)
+			const obj = getDirInfo(directory)
 
-		const link = system.fs[obj.location].children[obj.filename]
+			const link = system.fs[obj.location].children[obj.filename]
 
-		const type = link.type
+			const type = link.type
 
-		return type == "dir"
+			return type == "dir"
+		} catch (e) {
+			return false
+		}
 	}
 
 
@@ -570,7 +574,7 @@ async function loader() {
 			opt[system.selection] = "> " + opt[system.selection]
 
 			system.logs[0].content = opt.join("\n")
-			
+
 			system.logsBox.innerText = system.logs[0].content
 		}
 	}, 100)
