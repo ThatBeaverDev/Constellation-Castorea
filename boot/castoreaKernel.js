@@ -221,18 +221,47 @@ async function init() {
 		delete system.processes[Number(PID)]
 	}
 
-	system.toDir = function toDir(dir, baseDir) {
-		if (baseDir == undefined) {
-			throw new Error(`baseDir mist be defined: while casting ${dir} to dir.`)
-		}
+    function getParentOfDir(dir) {
+        if (dir == "/") {
+            return "/"
+        }
 
-		if (dir[0] == "/") {
-			return dir
-		} else if (baseDir.at(-1) == "/") {
-			return baseDir + dir
-		}
-		return baseDir + "/" + dir
-	}
+        const reversed = dir.split("").reverse().join("")
+        const reversedParent = reversed.substring(reversed.indexOf("/") + 1)
+        const parent = reversedParent.split("").reverse().join("")
+
+        if (parent == "") {
+            return "/"
+        }
+
+        return parent
+    }
+
+    system.toDir = function toDir(directory, baseDir) {
+        if (baseDir == undefined) {
+            throw new Error(`baseDir must be defined: while casting ${dir} to dir.`)
+        }
+
+        let dir = directory.split("")
+        if (dir[0] + dir[1] == "..") {
+            dir[0] = getParentOfDir(baseDir)
+            dir.splice(1, 1)
+            if (dir[1] == "/") {
+                dir.splice(1, 1)
+            }
+        } else if (dir[0] == ".") {
+            dir[0] = baseDir
+        }
+
+        dir = dir.join("")
+
+        if (dir[0] == "/") {
+            return dir
+        } else if (baseDir.at(-1) == "/") {
+            return baseDir + dir
+        }
+        return baseDir + "/" + dir
+    }
 
 	if (system.isNew) {
 		system.log(Name, "Creating Basic Directories...")
