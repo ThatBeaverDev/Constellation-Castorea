@@ -1,3 +1,5 @@
+// kernel sanders was not harmed in the writing of this code
+
 async function init() {
 	const Name = "/boot/castoreaKernel.js"
 	const PID = -1
