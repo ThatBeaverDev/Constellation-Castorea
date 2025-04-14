@@ -601,7 +601,7 @@ async function bootOS(osName, ssm) {
 
 			switch (data.version) {
 				case "v0.3.0":
-					system.fs = {...system.fs, data.fs}
+					system.fs = {...system.fs, ...data.fs}
 					break;
 				default:
 					throw new Error("Filesystem file not supported.")
