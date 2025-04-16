@@ -2,6 +2,7 @@
   "files": [
     "/boot/castoreaKernel.js",
     "/boot/loader.js",
+    "/boot/csw.js",
     {
       "dir": "/etc/path.json",
       "parse": true
@@ -15,7 +16,8 @@
       "parse": true
     },
     "/dev/null",
-    "/dev/urandom"
+    "/dev/urandom",
+    "/etc/hostname"
   ],
   "folders": [
     "/bin",
@@ -27,8 +29,6 @@
     "/lib",
     "/mnt",
     "/opt",
-    "/proc",
-    "/tmp",
     "/usr",
     "/usr/bin",
     "/usr/bin/aurora",
@@ -40,48 +40,41 @@
     "/usr/share",
     "/var",
     "/var/crash",
+    "/var/lib",
     "/var/mail",
     "/var/src",
     "/var/tmp"
   ],
   "packages": [
-    "systemWrapper",
+    "systemC",
+    "core",
     "node",
     "man",
-    "ls",
-    "pwd",
-    "clear",
-    "cat",
     "reboot",
-    "cd",
-    "echo",
     "js",
-    "systemC",
     "crl",
-    "cDesk",
     "wget",
     "ps",
-    "mkdir",
-    "touch",
     "sysinfo",
     "rn",
-    "mv",
-    "rm",
     "kill",
     "killall",
     "build",
     "upgrade",
-    "export",
+    "import-export",
     "aquila",
     "useradd",
     "lara",
     "tree",
     "yes",
     "su",
-    "whoami",
     "sudo",
-    "du",
     "setup",
-    "aurora"
+    "pgext",
+    "pcsMsg",
+    "pebble",
+    "yak",
+    "hoplite",
+    "mnt"
   ]
 }
