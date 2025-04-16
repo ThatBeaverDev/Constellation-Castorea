@@ -820,8 +820,6 @@ async function loader() {
 			const obj = getDirInfo(directory)
 
 			const link = system.fs.link(obj.dir)
-			
-			console.log(vfs.vfs)
 
 			vfs.vfs[obj.location].children[obj.filename] = link
 		}
