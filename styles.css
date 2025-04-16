@@ -1,0 +1,15 @@
+body {
+    width: 90vw;
+    overflow-x: hidden;
+}
+
+#display {
+    font-family: "Source Code Pro", serif;
+    font-optical-sizing: auto;
+    font-weight: 450;
+    font-style: normal;
+    font-size: 16px;
+    white-space: pre;
+    width: 100vw;
+    height: calc(100vh - 50px);
+}
