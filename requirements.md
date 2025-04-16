@@ -1,3 +1,3 @@
-# Browser Requirements to run nordOS are as follows:
+# Browser Requirements to run Constellation are as follows:
 - `crypto.subtle`
-- Filesystem API (recommended)
+- Filesystem API (recommended but not necessarily needed)
