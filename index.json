@@ -71,10 +71,6 @@
     "sudo",
     "setup",
     "pgext",
-    "pcsMsg",
-    "pebble",
-    "yak",
-    "hoplite",
-    "mnt"
+    "yak"
   ]
 }
